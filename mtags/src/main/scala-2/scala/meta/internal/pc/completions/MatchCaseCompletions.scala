@@ -127,13 +127,13 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
       // Step 3: special handle case when selector is a tuple or `FunctionN`.
       if (definitions.isTupleType(parents.selector)) {
         result += new TextEditMember(
-          "case () =>",
+          "case () => ",
           new l.TextEdit(
             editRange,
-            if (clientSupportsSnippets) "case ($0) =>" else "case () =>"
+            if (clientSupportsSnippets) "case ($0) => " else "case () => "
           ),
           parents.selector.typeSymbol,
-          label = Some(s"case ${parents.selector} =>"),
+          label = Some(s"case ${parents.selector} => "),
           command = metalsConfig.parameterHintsCommand().asScala
         )
       }
@@ -241,7 +241,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
               .map(_.edit.getNewText())
               .mkString(
                 if (clientSupportsSnippets) {
-                  s"match {\n\t${head.edit.getNewText} $$0\n\t"
+                  s"match {\n\t${head.edit.getNewText}$$0\n\t"
                 } else {
                   s"match {\n\t${head.edit.getNewText}\n\t"
                 },
@@ -366,12 +366,12 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           }
         name + suffix
       }
-      val label = s"case $pattern =>"
+      val label = s"case $pattern => "
       new TextEditMember(
         filterText = label,
         edit = new l.TextEdit(
           editRange,
-          label + (if (isSnippet && clientSupportsSnippets) " $0" else "")
+          label + (if (isSnippet && clientSupportsSnippets) "$0" else "")
         ),
         sym = sym,
         label = Some(label),
@@ -389,10 +389,10 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           editRange,
           if (isSnippet && clientSupportsSnippets)
             s"case $${0:_}: $name$suffix => "
-          else s"case _: $name$suffix =>"
+          else s"case _: $name$suffix => "
         ),
         sym,
-        Some(s"case _: $name$suffix =>"),
+        Some(s"case _: $name$suffix => "),
         additionalTextEdits = autoImports
       )
     }

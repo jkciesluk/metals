@@ -92,7 +92,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
         |object App {
         |  null.asInstanceOf[Weekday] match {
         |\tcase Workday => $$0
-        |\tcase Weekend =>
+        |\tcase Weekend => 
         |}
         |}
         |""".stripMargin,
@@ -111,7 +111,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                  |object App {
                  |  null.asInstanceOf[Weekday] match
                  |\tcase Workday => $$0
-                 |\tcase Weekend =>
+                 |\tcase Weekend => 
                  |
                  |}
                  |""".stripMargin
@@ -135,7 +135,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
         |object App {
         |  null.asInstanceOf[Weekday] match {
         |\tcase Workday => $$0
-        |\tcase Weekend =>
+        |\tcase Weekend => 
         |}
         |}
         |""".stripMargin,
@@ -148,7 +148,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                  |object App {
                  |  null.asInstanceOf[Weekday] match
                  |\tcase Workday => $$0
-                 |\tcase Weekend =>
+                 |\tcase Weekend => 
                  |
                  |}
                  |""".stripMargin
@@ -174,8 +174,8 @@ class CompletionMatchSuite extends BaseCompletionSuite {
         |object App {
         |  null.asInstanceOf[TestTree] match {
         |\tcase Branch1(t1) => $$0
-        |\tcase Leaf(v) =>
-        |\tcase Branch2(t1, t2) =>
+        |\tcase Leaf(v) => 
+        |\tcase Branch2(t1, t2) => 
         |}
         |}
         |""".stripMargin,
@@ -190,8 +190,8 @@ class CompletionMatchSuite extends BaseCompletionSuite {
             |object App {
             |  null.asInstanceOf[TestTree] match
             |\tcase Branch1(t1) => $$0
-            |\tcase Leaf(v) =>
-            |\tcase Branch2(t1, t2) =>
+            |\tcase Leaf(v) => 
+            |\tcase Branch2(t1, t2) => 
             |
             |}
             |""".stripMargin
@@ -209,7 +209,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
        |object App {
        |  Option(1) match {
        |\tcase Some(value) => $$0
-       |\tcase None =>
+       |\tcase None => 
        |}
        |}
        |""".stripMargin,
@@ -219,7 +219,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
           |object App {
           |  Option(1) match {
           |\tcase Some(x) => $0
-          |\tcase None =>
+          |\tcase None => 
           |}
           |}
           |""".stripMargin,
@@ -227,7 +227,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                 |object App {
                 |  Option(1) match
                 |\tcase None => $$0
-                |\tcase Some(value) =>
+                |\tcase Some(value) => 
                 |
                 |}
                 |""".stripMargin,
@@ -279,8 +279,8 @@ class CompletionMatchSuite extends BaseCompletionSuite {
        |object Main {
        |  (null: AccessMode) match {
        |\tcase READ => $$0
-       |\tcase WRITE =>
-       |\tcase EXECUTE =>
+       |\tcase WRITE => 
+       |\tcase EXECUTE => 
        |}
        |}""".stripMargin,
     filter = _.contains("exhaustive"),
@@ -296,8 +296,8 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                 |object Main {
                 |  (null: AccessMode) match
                 |\tcase READ => $$0
-                |\tcase WRITE =>
-                |\tcase EXECUTE =>
+                |\tcase WRITE => 
+                |\tcase EXECUTE => 
                 |
                 |}""".stripMargin
     ),
@@ -332,8 +332,8 @@ class CompletionMatchSuite extends BaseCompletionSuite {
         |  val x: Color = ???
         |  x match
         |\tcase Red => $$0
-        |\tcase Blue =>
-        |\tcase Green =>
+        |\tcase Blue => 
+        |\tcase Green => 
         |
         |}
         |""".stripMargin,
@@ -358,7 +358,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
        |object Main {
        |  Option(1) match {
        |\tcase Some(value) => $$0
-       |\tcase scala.None =>
+       |\tcase scala.None => 
        |}
        |}""".stripMargin,
     filter = _.contains("exhaustive"),
@@ -401,7 +401,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
        |  def testExhaustive[T <: Test](test: T): Boolean =
        |    test match {
        |\tcase Foo => $$0
-       |\tcase Bar =>
+       |\tcase Bar => 
        |}
        |}""".stripMargin,
     filter = _.contains("exhaustive"),
@@ -417,7 +417,7 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                 |  def testExhaustive[T <: Test](test: T): Boolean =
                 |    test match
                 |\tcase Foo => $$0
-                |\tcase Bar =>
+                |\tcase Bar => 
                 |
                 |}""".stripMargin
     ),
@@ -453,9 +453,9 @@ class CompletionMatchSuite extends BaseCompletionSuite {
        |  def testExhaustive[T <: TestA with TestB](test: T): Boolean =
        |    test match {
        |\tcase Foo => $$0
-       |\tcase Bar =>
-       |\tcase Baz =>
-       |\tcase Goo =>
+       |\tcase Bar => 
+       |\tcase Baz => 
+       |\tcase Goo => 
        |}
        |}""".stripMargin,
     filter = _.contains("exhaustive"),
@@ -474,9 +474,9 @@ class CompletionMatchSuite extends BaseCompletionSuite {
                 |  def testExhaustive[T <: TestA with TestB](test: T): Boolean =
                 |    test match
                 |\tcase Foo => $$0
-                |\tcase Bar =>
-                |\tcase Baz =>
-                |\tcase Goo =>
+                |\tcase Bar => 
+                |\tcase Baz => 
+                |\tcase Goo => 
                 |
                 |}""".stripMargin
     ),

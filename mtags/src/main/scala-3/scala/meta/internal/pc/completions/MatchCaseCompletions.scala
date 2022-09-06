@@ -100,15 +100,13 @@ object CaseKeywordCompletion:
     val result = ListBuffer.empty[CompletionValue]
     val isVisited = mutable.Set.empty[Symbol]
     def visit(sym: Symbol, name: String, autoImports: List[l.TextEdit]): Unit =
-      val isValid = !isVisited(sym) && !parents.isParent(sym)
-        && (sym.is(Case) || sym.is(Flags.Module) || sym.isClass)
-        && parents.isSubClass(sym, false)
       def recordVisit(s: Symbol): Unit =
         if s != NoSymbol && !isVisited(s) then
           isVisited += s
           recordVisit(s.moduleClass)
           recordVisit(s.sourceModule)
-      if isValid then
+
+      if !isVisited(sym) then
         recordVisit(sym)
         if completionGenerator.fuzzyMatches(name) then
           result += completionGenerator.toCompletionValue(
@@ -116,7 +114,6 @@ object CaseKeywordCompletion:
             name,
             autoImports,
           )
-        end if
       end if
     end visit
     val selectorSym = parents.selector.typeSymbol
@@ -127,15 +124,15 @@ object CaseKeywordCompletion:
       )
     then
       val label =
-        if patternOnly.isEmpty then s"case ${parents.selector.show} =>"
+        if patternOnly.isEmpty then s"case ${parents.selector.show} => "
         else parents.selector.show
       result += CompletionValue.CaseKeyword(
         selectorSym,
         label,
         Some(
           if patternOnly.isEmpty then
-            if config.isCompletionSnippetsEnabled() then "case ($0) =>"
-            else "case () =>"
+            if config.isCompletionSnippetsEnabled() then "case ($0) => "
+            else "case () => "
           else if config.isCompletionSnippetsEnabled() then "($0)"
           else "()"
         ),
@@ -144,18 +141,23 @@ object CaseKeywordCompletion:
         command = config.parameterHintsCommand().asScala,
       )
     else
+      def isValid(sym: Symbol) = !parents.isParent(sym)
+        && (sym.is(Case) || sym.is(Flags.Module) || sym.isClass)
+        && parents.isSubClass(sym, false)
       // Step 1: walk through scope members.
       indexedContext.scopeSymbols
-        .foreach(s => visit(s.info.dealias.typeSymbol, s.decodedName, Nil))
+        .map(_.info.dealias.typeSymbol)
+        .filter(s => isValid(s))
+        .foreach(s => visit(s, s.decodedName, Nil))
 
       // Step 2: walk through known subclasses of sealed types.
       MetalsSealedDesc.sealedStrictDescendants(selectorSym).foreach { sym =>
         val autoImport = autoImportsGen.forSymbol(sym)
         autoImport match
           case Some(value) =>
-            visit(sym.info.dealias.typeSymbol, sym.decodedName, value)
+            visit(sym, sym.decodedName, value)
           case scala.None =>
-            visit(sym.info.dealias.typeSymbol, sym.showFullName, Nil)
+            visit(sym, sym.showFullName, Nil)
       }
     end if
 
@@ -342,12 +344,12 @@ class CompletionValueGenerator(
         ) // Symbol is not a case class with unapply deconstructor so we use typed pattern, example `_: User`
 
     val label =
-      if patternOnly.isEmpty then s"case $pattern =>"
+      if patternOnly.isEmpty then s"case $pattern => "
       else pattern
     CompletionValue.CaseKeyword(
       sym,
       label,
-      Some(label + (if clientSupportsSnippets then " $0" else "")),
+      Some(label + (if clientSupportsSnippets then "$0" else "")),
       autoImports,
       // filterText = if !doFilterText then Some("") else None,
       range = Some(completionPos.toEditRange),

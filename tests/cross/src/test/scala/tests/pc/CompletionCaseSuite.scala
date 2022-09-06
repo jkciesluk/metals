@@ -31,8 +31,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    @@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -54,14 +54,14 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    @@
       |  }
       |}""".stripMargin,
-    """|case Bird(name) => pkg
-       |case _: Cat => pkg
-       |case _: Dog => pkg
-       |case Elephant => pkg
-       |case _: HasFeet[_, _] => pkg
-       |case _: HasMouth[_] => pkg
-       |case HasWings(e) => pkg
-       |case Seal => pkg
+    """|case Bird(name) =>  pkg
+       |case _: Cat =>  pkg
+       |case _: Dog =>  pkg
+       |case Elephant =>  pkg
+       |case _: HasFeet[_, _] =>  pkg
+       |case _: HasMouth[_] =>  pkg
+       |case HasWings(e) =>  pkg
+       |case Seal =>  pkg
        |""".stripMargin,
   )
 
@@ -73,8 +73,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    cas@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -87,8 +87,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    cas@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -101,8 +101,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    cas@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -114,8 +114,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    case@@
       |  }
       |}""".stripMargin,
-    """|case Left(value) => scala.util
-       |case Right(value) => scala.util
+    """|case Left(value) =>  scala.util
+       |case Right(value) =>  scala.util
        |""".stripMargin,
   )
 
@@ -128,8 +128,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    case@@
       |  }
       |}""".stripMargin,
-    """|case Failure(exception) => scala.util
-       |case Success(value) => scala.util
+    """|case Failure(exception) =>  scala.util
+       |case Success(value) =>  scala.util
        |""".stripMargin,
   )
 
@@ -148,12 +148,12 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  }
       |}""".stripMargin,
     // Assert we don't include AdtTwo in the results.
-    """|case Cls(a, b) => `sealed-two`.Outer
+    """|case Cls(a, b) =>  `sealed-two`.Outer
        |""".stripMargin,
     compat = Map(
       // known-direct subclasses doesn't work well in 2.11 apparently.
       "2.11" -> "",
-      "3" -> "case Cls(a, b) => sealed-two.Outer",
+      "3" -> "case Cls(a, b) =>  sealed-two.Outer",
     ),
   )
 
@@ -169,12 +169,12 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  }
       |}""".stripMargin,
     """|case scala.util.Left(value) =>
-       |case Right(value) => scala.util
+       |case Right(value) =>  scala.util
        |""".stripMargin,
     compat = Map(
       "3" ->
-        """|case Left(value) => scala.util
-           |case Right(value) => scala.util
+        """|case Left(value) =>  scala.util
+           |case Right(value) =>  scala.util
            |""".stripMargin
     ),
   )
@@ -235,8 +235,28 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    case@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
+       |""".stripMargin,
+  )
+
+  check(
+    "scala-enum".tag(IgnoreScala2),
+    """
+      |package example
+      |enum Color:
+      |  case Red
+      |  case Blue
+      |  case Green
+      |
+      |object Main {
+      |  val x: Color = ???
+      |  x match
+      |    case@@
+      |}""".stripMargin,
+    """|case Blue => Color
+       |case Green => Color
+       |case Red => Color
        |""".stripMargin,
   )
 
@@ -249,8 +269,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    case@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -263,7 +283,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    case@@
       |  }
       |}""".stripMargin,
-    """|case (Int, Int) => scala
+    """|case (Int, Int) =>  scala
        |""".stripMargin,
   )
 
@@ -275,8 +295,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -289,8 +309,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -303,8 +323,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -316,8 +336,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -329,8 +349,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -343,8 +363,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -357,8 +377,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    ca@@
       |  }
       |}""".stripMargin,
-    """|case None => scala
-       |case Some(value) => scala
+    """|case None =>  scala
+       |case Some(value) =>  scala
        |""".stripMargin,
   )
 
@@ -370,13 +390,13 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    cas@@
       |  }
       |}""".stripMargin,
-    """|case head :: next => scala.collection.immutable
-       |case Nil => scala.collection.immutable
+    """|case head :: next =>  scala.collection.immutable
+       |case Nil =>  scala.collection.immutable
        |""".stripMargin,
     compat = Map(
       "2.12" ->
-        """|case head :: tl => scala.collection.immutable
-           |case Nil => scala.collection.immutable
+        """|case head :: tl =>  scala.collection.immutable
+           |case Nil =>  scala.collection.immutable
            |""".stripMargin
     ),
   )
@@ -389,7 +409,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |}
       |""".stripMargin,
     "List(1 -> 2).map { c@@ }",
-    "List(1 -> 2).map { case ($0) => }",
+    "List(1 -> 2).map { case ($0) =>  }",
     assertSingleItem = false,
     command = paramHint,
   )
@@ -401,7 +421,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  List(1 -> 2).map { c@@ }
       |}
       |""".stripMargin,
-    """|case (Int, Int) => scala
+    """|case (Int, Int) =>  scala
        |""".stripMargin,
     topLines = Some(1),
   )
@@ -428,7 +448,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |}
       |""".stripMargin,
     "List(1).foldLeft(0) { cas@@ }",
-    "List(1).foldLeft(0) { case ($0) => }",
+    "List(1).foldLeft(0) { case ($0) =>  }",
     assertSingleItem = false,
     command = paramHint,
   )
