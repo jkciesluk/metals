@@ -54,7 +54,8 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |    @@
       |  }
       |}""".stripMargin,
-    """|case Bird(name) => pkg
+    """|case _: Animal => pkg
+       |case Bird(name) => pkg
        |case _: Cat => pkg
        |case _: Dog => pkg
        |case Elephant => pkg
@@ -560,7 +561,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
   )
 
   check(
-    "single-case-class".tag(IgnoreScala2),
+    "single-case-class",
     """
       |package example
       |case class Foo(a: Int, b: Int)
