@@ -452,20 +452,40 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
     }
   }
   object CaseExtractors {
+    object CaseDefMatch {
+      def unapply(path: List[Tree]) =
+        path match {
+          case (_: CaseDef) :: (m: Match) :: parent :: _ =>
+            Some((m.selector, parent))
+          case _ => None
+        }
+    }
+
     object CaseExtractor {
       def unapply(path: List[Tree]) =
         path match {
+          // xxx match {
+          //   ca@@
           case (m @ Match(_, Nil)) :: parent :: _ =>
-            Some(m.selector, parent)
-          case Ident(name) :: (_: CaseDef) :: (m: Match) :: parent :: _
+            Some((m.selector, parent))
+
+          // xxx match {
+          //   case A =>
+          //   ca@@
+          case Ident(name) :: CaseDefMatch(selector, parent)
               if isCasePrefix(name) =>
-            Some(m.selector, parent)
+            Some((selector, parent))
+
+          // xxx match {
+          //   case A => ()
+          //   ca@@
           case (ident @ Ident(name)) :: Block(
                 _,
                 expr
-              ) :: (_: CaseDef) :: (m: Match) :: parent :: _
+              ) :: CaseDefMatch(selector, parent)
               if ident == expr && isCasePrefix(name) =>
-            Some(m.selector, parent)
+            Some((selector, parent))
+
           case _ => None
         }
     }
@@ -473,24 +493,24 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
       def unapply(path: List[Tree]) =
         path match {
           // case @@ =>
-          case Bind(_, _) :: CaseExtractor(selector, parent) =>
+          case Bind(_, _) :: CaseDefMatch(selector, parent) =>
             Some((selector, parent, ""))
           // case Som@@ =>
           case Ident(
                 name
-              ) :: CaseExtractor(selector, parent) =>
+              ) :: CaseDefMatch(selector, parent) =>
             Some((selector, parent, name.decoded))
           // case abc @ @@ =>
           case Bind(_, _) :: Bind(
                 _,
                 _
-              ) :: CaseExtractor(selector, parent) =>
+              ) :: CaseDefMatch(selector, parent) =>
             Some((selector, parent, ""))
           // case abc @ Som@@ =>
           case Ident(name) :: Bind(
                 _,
                 _
-              ) :: CaseExtractor(selector, parent) =>
+              ) :: CaseDefMatch(selector, parent) =>
             Some((selector, parent, name.decoded))
           case _ => None
         }
@@ -504,15 +524,15 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           case Ident(name) :: Typed(
                 _,
                 _
-              ) :: (_: CaseDef) :: (m: Match) :: parent :: _ =>
-            Some((m.selector, parent, name.decoded))
+              ) :: CaseDefMatch(selector, parent) =>
+            Some((selector, parent, name.decoded))
           // case ab: Som@@ =>
           // case ab: @@ =>
           case Ident(name) :: Typed(_, _) :: Bind(
                 _,
                 _
-              ) :: (_: CaseDef) :: (m: Match) :: parent :: _ =>
-            Some((m.selector, parent, name.decoded))
+              ) :: CaseDefMatch(selector, parent) =>
+            Some((selector, parent, name.decoded))
           case _ => None
         }
     }

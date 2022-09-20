@@ -14,9 +14,6 @@ class CompletionPatternSuite extends BaseCompletionSuite {
       _parameterHintsCommand = paramHint
     )
 
-  override def ignoreScalaVersion: Option[IgnoreScalaVersion] =
-    Some(IgnoreScala2)
-
   checkEdit(
     "empty",
     """
@@ -80,8 +77,13 @@ class CompletionPatternSuite extends BaseCompletionSuite {
       |    case _: @@ =>
       |  }
       |}""".stripMargin,
-    """|Some[?] scala
+    """|None scala
        |""".stripMargin,
+    compat = Map(
+      "3" ->
+        """|Some[?] scala
+           |""".stripMargin
+    ),
     topLines = Some(1),
   )
   check(
@@ -92,8 +94,13 @@ class CompletionPatternSuite extends BaseCompletionSuite {
       |    case _: S@@ =>
       |  }
       |}""".stripMargin,
-    """|Some[?] scala
+    """|Some[_] scala
        |""".stripMargin,
+    compat = Map(
+      "3" ->
+        """|Some[?] scala
+           |""".stripMargin
+    ),
     topLines = Some(1),
   )
 
@@ -105,8 +112,13 @@ class CompletionPatternSuite extends BaseCompletionSuite {
       |    case ab: @@ =>
       |  }
       |}""".stripMargin,
-    """|Some[?] scala
+    """|None scala
        |""".stripMargin,
+    compat = Map(
+      "3" ->
+        """|Some[?] scala
+           |""".stripMargin
+    ),
     topLines = Some(1),
   )
 
@@ -118,8 +130,13 @@ class CompletionPatternSuite extends BaseCompletionSuite {
       |    case ab: S@@ =>
       |  }
       |}""".stripMargin,
-    """|Some[?] scala
+    """|Some[_] scala
        |""".stripMargin,
+    compat = Map(
+      "3" ->
+        """|Some[?] scala
+           |""".stripMargin
+    ),
     topLines = Some(1),
   )
 }

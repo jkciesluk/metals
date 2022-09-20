@@ -450,7 +450,7 @@ trait Completions { this: MetalsGlobal =>
         ArgCompletion(ident, apply, pos, text, completions)
       }
     }
-
+    // pprint.log(latestEnclosingArg.take(3))
     latestEnclosingArg match {
       case MillIvyExtractor(dep) =>
         MillIvyCompletion(pos, text, dep)
