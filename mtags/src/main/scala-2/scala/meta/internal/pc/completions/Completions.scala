@@ -453,6 +453,8 @@ trait Completions { this: MetalsGlobal =>
     }
 
     latestEnclosingArg match {
+      case SbtLibExtractor(position, dep) if pos.source.path.isSbt => 
+        SbtLibCompletion(position, dep.stripSuffix(CURSOR))
       case ScalaCliExtractor(dep) =>
         ScalaCliCompletion(pos, text, dep)
       case _ if isScaladocCompletion(pos, text) =>

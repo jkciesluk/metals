@@ -20,7 +20,10 @@ object CoursierComplete {
       else scalaVersion.split('.').take(2).mkString(".")
     )
   lazy val scalaVersion = BuildInfo.scalaCompilerVersion
-  def complete(dependency: String): List[String] = {
+  def complete(
+      dependency: String,
+      includeScala: Boolean = true
+  ): List[String] = {
 
     def completions(s: String): List[String] = {
       val futureCompletions = Future {
@@ -34,9 +37,12 @@ object CoursierComplete {
 
     val javaCompletions = completions(dependency)
     val scalaCompletions =
-      if (dependency.endsWith(":") && dependency.count(_ == ':') == 1)
+      if (
+        includeScala &&
+        dependency.endsWith(":") && dependency.count(_ == ':') == 1
+      )
         completions(dependency + ":").map(":" + _)
-      else List.empty
+      else Nil
     javaCompletions ++ scalaCompletions
   }
   def inferEditRange(point: Int, text: String): (Int, Int) = {
