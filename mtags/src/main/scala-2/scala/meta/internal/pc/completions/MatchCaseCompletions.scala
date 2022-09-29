@@ -8,11 +8,11 @@ import scala.collection.mutable.ListBuffer
 
 import scala.meta.internal.jdk.CollectionConverters._
 import scala.meta.internal.mtags.MtagsEnrichments._
+import scala.meta.internal.pc.CompletionFuzzy
 import scala.meta.internal.pc.Identifier
 import scala.meta.internal.pc.MetalsGlobal
 
 import org.eclipse.{lsp4j => l}
-import scala.meta.internal.pc.CompletionFuzzy
 
 trait MatchCaseCompletions { this: MetalsGlobal =>
 
@@ -36,7 +36,8 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
       text: String,
       parent: Tree,
       patternOnly: Option[String] = None,
-      hasBind: Boolean = false
+      hasBind: Boolean = false,
+      includeExhaustiveCase: Boolean = false
   ) extends CompletionPosition {
     val context: Context = doLocateContext(pos)
     val parents: Parents = selector match {
@@ -74,61 +75,70 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
       member.isInstanceOf[TextEditMember]
 
     override def contribute: List[Member] = {
-      val completionGenerator = new CompletionValueGenerator(
-        editRange,
-        context,
-        clientSupportsSnippets,
-        patternOnly,
-        hasBind
-      )
-      val result = ListBuffer.empty[Member]
-      val isVisited = mutable.Set.empty[Symbol]
-      def visit(
-          sym: Symbol,
-          name: String,
-          autoImports: List[l.TextEdit]
-      ): Unit = {
-        val fsym = sym.dealiasedSingleType
-        def recordVisit(s: Symbol): Unit = {
-          if (s != NoSymbol && !isVisited(s)) {
-            isVisited += s
-            recordVisit(s.moduleClass)
-            recordVisit(s.module)
-            recordVisit(s.dealiased)
-          }
-        }
-        if (!isVisited(sym) && !isVisited(fsym)) {
-          recordVisit(sym)
-          recordVisit(fsym)
-          if (fuzzyMatches(name))
-            result += completionGenerator.toCaseMember(
-              name,
-              sym,
-              fsym,
-              autoImports
-            )
-        }
-      }
       val selectorSym = parents.selector.typeSymbol
+
       // Special handle case when selector is a tuple or `FunctionN`.
       if (definitions.isTupleType(parents.selector)) {
-        result += new TextEditMember(
-          "case () => ",
-          new l.TextEdit(
-            editRange,
-            if (clientSupportsSnippets) "case ($0) =>" else "case () =>"
-          ),
-          selectorSym,
-          label = Some(s"case ${parents.selector} =>"),
-          command = metalsConfig.parameterHintsCommand().asScala
+        List(
+          new TextEditMember(
+            "case () => ",
+            new l.TextEdit(
+              editRange,
+              if (clientSupportsSnippets) "case ($0) =>" else "case () =>"
+            ),
+            selectorSym,
+            label = Some(s"case ${parents.selector} =>"),
+            command = metalsConfig.parameterHintsCommand().asScala
+          )
         )
       } else {
-        // Step 0: case for selector type
-        if (
-          !(selectorSym.isSealed &&
-            (selectorSym.isAbstract || selectorSym.isTrait))
+        val completionGenerator = new CompletionValueGenerator(
+          editRange,
+          context,
+          clientSupportsSnippets,
+          patternOnly,
+          hasBind
         )
-          visit(selectorSym, Identifier(selectorSym.name), Nil)
+
+        val result = ListBuffer.empty[TextEditMember]
+        val isVisited = mutable.Set.empty[Symbol]
+        def visit(
+            sym: Symbol,
+            name: String,
+            autoImports: List[l.TextEdit]
+        ): Unit = {
+          val fsym = sym.dealiasedSingleType
+          def recordVisit(s: Symbol): Unit = {
+            if (s != NoSymbol && !isVisited(s)) {
+              isVisited += s
+              recordVisit(s.moduleClass)
+              recordVisit(s.module)
+              recordVisit(s.dealiased)
+            }
+          }
+          if (!isVisited(sym) && !isVisited(fsym)) {
+            recordVisit(sym)
+            recordVisit(fsym)
+            if (fuzzyMatches(name))
+              result += completionGenerator.toCaseMember(
+                name,
+                sym,
+                fsym,
+                autoImports
+              )
+          }
+        }
+
+        // Step 0: case for selector type
+        selectorSym.info match {
+          case NoType => ()
+          case _ =>
+            if (
+              !(selectorSym.isSealed &&
+                (selectorSym.isAbstract || selectorSym.isTrait))
+            )
+              visit(selectorSym, Identifier(selectorSym.name), Nil)
+        }
 
         // Step 1: walk through scope members.
         metalsScopeMembers(pos).iterator
@@ -142,10 +152,13 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
               parents.isSubClass(fsym, includeReverse = false)
             if (isValid) visit(sym, Identifier(m.sym.name), Nil)
           }
-
         // Step 2: walk through known direct subclasses of sealed types.
         val autoImport = autoImportPosition(pos, text)
+        // In `List(foo).map { cas@@} we want to provide also `case (exhaustive)` completion
+        // which works like exhaustive match, so we need to collect only members from this step
+        val sealedDescs = mutable.Set.empty[Symbol]
         selectorSym.foreachKnownDirectSubClass { sym =>
+          sealedDescs += sym.dealiased
           autoImport match {
             case Some(value) =>
               val (shortName, edits) =
@@ -155,10 +168,58 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
               visit(sym, sym.fullNameSyntax, Nil)
           }
         }
+        val res = result.result()
+        if (includeExhaustiveCase) {
+          val sealedMembersBuf = ListBuffer.empty[TextEditMember]
+          selectorSym.foreachKnownDirectSubClass { sym =>
+            val (shortName, edits) = autoImport match {
+              case Some(value) =>
+                ShortenedNames.synthesize(sym, pos, context, value)
+              case scala.None =>
+                (sym.fullNameSyntax, Nil)
+            }
+            sealedMembersBuf += completionGenerator.toCaseMember(
+              shortName,
+              sym,
+              sym.dealiasedSingleType,
+              edits
+            )
+          }
+          val sealedMembers = sealedMembersBuf.result()
+          sealedMembers match {
+            case Nil => res
+            case head :: tail =>
+              val newText = new l.TextEdit(
+                editRange,
+                tail
+                  .map(_.label.getOrElse(""))
+                  .mkString(
+                    if (clientSupportsSnippets) {
+                      s"\n\t${head.label.getOrElse("")} $$0\n\t"
+                    } else {
+                      s"\n\t${head.label.getOrElse("")}\n\t"
+                    },
+                    "\n\t",
+                    "\n"
+                  )
+              )
+              val detail =
+                s" ${metalsToLongString(selectorSym.tpe, new ShortenedNames())} (${sealedMembers.length} cases)"
+              val exhaustive = new TextEditMember(
+                "case (exhaustive)",
+                newText,
+                selectorSym,
+                label = Some("case (exhaustive)"),
+                detail = Some(detail),
+                additionalTextEdits =
+                  sealedMembers.toList.flatMap(_.additionalTextEdits)
+              )
+              exhaustive :: res
+          }
+        } else res
       }
-      result.toList
     }
-    def fuzzyMatches(name: String) =
+    def fuzzyMatches(name: String): Boolean =
       patternOnly match {
         case None => true
         case Some(query) => CompletionFuzzy.matches(query, name)
@@ -453,7 +514,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
   }
   object CaseExtractors {
     object CaseDefMatch {
-      def unapply(path: List[Tree]) =
+      def unapply(path: List[Tree]): Option[(Tree, Tree)] =
         path match {
           case (_: CaseDef) :: (m: Match) :: parent :: _ =>
             Some((m.selector, parent))
@@ -462,7 +523,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
     }
 
     object CaseExtractor {
-      def unapply(path: List[Tree]) =
+      def unapply(path: List[Tree]): Option[(Tree, Tree)] =
         path match {
           // xxx match {
           //   ca@@
@@ -490,7 +551,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
         }
     }
     object CasePatternExtractor {
-      def unapply(path: List[Tree]) =
+      def unapply(path: List[Tree]): Option[(Tree, Tree, String)] =
         path match {
           // case @@ =>
           case Bind(_, _) :: CaseDefMatch(selector, parent) =>
@@ -517,7 +578,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
     }
 
     object TypedCasePatternExtractor {
-      def unapply(path: List[Tree]) =
+      def unapply(path: List[Tree]): Option[(Tree, Tree, String)] =
         path match {
           // case _: Som@@ =>
           // case _: @@ =>

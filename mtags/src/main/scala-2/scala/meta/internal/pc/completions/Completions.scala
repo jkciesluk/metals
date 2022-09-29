@@ -442,7 +442,14 @@ trait Completions { this: MetalsGlobal =>
     ): CompletionPosition = {
       if (hasLeadingBrace(ident, text)) {
         if (isCasePrefix(ident.name)) {
-          CaseKeywordCompletion(EmptyTree, editRange, pos, text, apply)
+          CaseKeywordCompletion(
+            EmptyTree,
+            editRange,
+            pos,
+            text,
+            apply,
+            includeExhaustiveCase = true
+          )
         } else {
           NoneCompletion
         }
@@ -450,7 +457,7 @@ trait Completions { this: MetalsGlobal =>
         ArgCompletion(ident, apply, pos, text, completions)
       }
     }
-    // pprint.log(latestEnclosingArg.take(3))
+
     latestEnclosingArg match {
       case MillIvyExtractor(dep) =>
         MillIvyCompletion(pos, text, dep)
