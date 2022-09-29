@@ -154,11 +154,7 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           }
         // Step 2: walk through known direct subclasses of sealed types.
         val autoImport = autoImportPosition(pos, text)
-        // In `List(foo).map { cas@@} we want to provide also `case (exhaustive)` completion
-        // which works like exhaustive match, so we need to collect only members from this step
-        val sealedDescs = mutable.Set.empty[Symbol]
         selectorSym.foreachKnownDirectSubClass { sym =>
-          sealedDescs += sym.dealiased
           autoImport match {
             case Some(value) =>
               val (shortName, edits) =
@@ -169,6 +165,9 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           }
         }
         val res = result.result()
+
+        // In `List(foo).map { cas@@} we want to provide also `case (exhaustive)` completion
+        // which works like exhaustive match, so we need to collect only members from this step
         if (includeExhaustiveCase) {
           val sealedMembersBuf = ListBuffer.empty[TextEditMember]
           selectorSym.foreachKnownDirectSubClass { sym =>
@@ -533,9 +532,10 @@ trait MatchCaseCompletions { this: MetalsGlobal =>
           // xxx match {
           //   case A =>
           //   ca@@
-          case Ident(name) :: CaseDefMatch(selector, parent)
-              if isCasePrefix(name) =>
-            Some((selector, parent))
+          case (id @ Ident(name)) :: (cd: CaseDef) :: (m: Match) :: parent :: _
+              if isCasePrefix(name) &&
+              cd.pos.line != id.pos.line =>
+            Some((m.selector, parent))
 
           // xxx match {
           //   case A => ()

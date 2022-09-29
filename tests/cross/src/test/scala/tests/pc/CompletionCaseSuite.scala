@@ -578,7 +578,7 @@ class CompletionCaseSuite extends BaseCompletionSuite {
   )
 
   check(
-    "private-member".tag(IgnoreScala2),
+    "private-member",
     """
       |package example
       |import scala.collection.immutable.Vector
