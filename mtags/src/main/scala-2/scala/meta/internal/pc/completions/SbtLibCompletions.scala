@@ -9,39 +9,45 @@ trait SbtLibCompletions {
   this: MetalsGlobal =>
 
   object SbtLibExtractor {
-    def unapply(path: List[Tree]) = {
+    def unapply(path: List[Tree]): Option[(Position, String)] = {
       path match {
-        case (lt @ Literal(art: Constant)) :: Apply(
-              Select(Literal(src: Constant), name: Name),
-              _
-            ) :: _
-            if Set("%", "%%").contains(name.decoded) &&
-              src.tag == StringTag && art.tag == StringTag =>
-          val depString =
-            src.stringValue +
-              name.decoded.replace('%', ':') +
-              art.stringValue
+        case (lt @ Literal(group: Constant)) :: Select(_, percent1: Name) :: _
+            if Set("%", "%%").contains(percent1.decoded) &&
+              group.tag == StringTag =>
+          val depString = group.stringValue
           Some((lt.pos, depString))
 
-        case (lt @ Literal(ver: Constant)) :: Apply(
+        case (lt @ Literal(artifact: Constant)) :: Apply(
+              Select(Literal(group: Constant), percent1: Name),
+              _
+            ) :: _
+            if Set("%", "%%").contains(percent1.decoded) &&
+              group.tag == StringTag && artifact.tag == StringTag =>
+          val depString =
+            group.stringValue +
+              percent1.decoded.replace('%', ':') +
+              artifact.stringValue
+          Some((lt.pos, depString))
+
+        case (lt @ Literal(revision: Constant)) :: Apply(
               Select(
                 Apply(
-                  Select(Literal(src: Constant), name: Name),
-                  List(Literal(art: Constant))
+                  Select(Literal(group: Constant), percent1: Name),
+                  List(Literal(artifact: Constant))
                 ),
-                name2: Name
+                percent2: Name
               ),
               _
             ) :: _
-            if Set("%", "%%").contains(name.decoded) &&
-              name2.decoded == "%" &&
-              art.tag == StringTag && src.tag == StringTag && ver.tag == StringTag =>
+            if Set("%", "%%").contains(percent1.decoded) &&
+              percent2.decoded == "%" &&
+              group.tag == StringTag && artifact.tag == StringTag && revision.tag == StringTag =>
           val depString =
-            src.stringValue +
-              name.decoded.replace('%', ':') +
-              art.stringValue +
+            group.stringValue +
+              percent1.decoded.replace('%', ':') +
+              artifact.stringValue +
               ":" +
-              ver.stringValue
+              revision.stringValue
           Some((lt.pos, depString))
 
         case _ =>
@@ -53,12 +59,18 @@ trait SbtLibCompletions {
 
   case class SbtLibCompletion(
       pos: Position,
-      dependency: String,
+      dependency: String
   ) extends CompletionPosition {
-    override def contribute = {
+    override def contribute: List[TextEditMember] = {
+      val cursorLen = if (dependency.contains(CURSOR)) CURSOR.length() else 0
       val completions =
-        CoursierComplete.complete(dependency, includeScala = false)
-      val editRange = pos.withStart(pos.start + 1).withEnd(pos.point + 1).toLsp
+        CoursierComplete.complete(
+          dependency.replace(CURSOR, ""),
+          includeScala = false
+        )
+      val editRange =
+        pos.withStart(pos.start + 1).withEnd(pos.end - 1 - cursorLen).toLsp
+
       completions
         .map(insertText =>
           new TextEditMember(
