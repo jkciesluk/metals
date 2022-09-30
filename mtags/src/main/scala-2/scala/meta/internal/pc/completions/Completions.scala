@@ -455,6 +455,8 @@ trait Completions { this: MetalsGlobal =>
     latestEnclosingArg match {
       case ScalaCliExtractor(dep) =>
         ScalaCliCompletion(pos, text, dep)
+      case MillExtractor(dep) =>
+        MillIvyCompletions(pos, text, dep)
       case _ if isScaladocCompletion(pos, text) =>
         val associatedDef = onUnitOf(pos.source) { unit =>
           new AssociatedMemberDefFinder(pos).findAssociatedDef(unit.body)
