@@ -33,7 +33,7 @@ trait MillCompletions {
       val (editStart, editEnd) =
         CoursierComplete.inferEditRange(pos.point, text)
       val editRange = pos.withStart(editStart).withEnd(editEnd).toLsp
-      
+
       completions
         .map(insertText =>
           new TextEditMember(
