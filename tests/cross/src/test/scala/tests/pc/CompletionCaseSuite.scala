@@ -284,13 +284,9 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  }
       |}""".stripMargin,
     """|case None => scala
-       |case (exhaustive) Option[A] (2 cases)
        |case Some(value) => scala
+       |case (exhaustive) Option[A] (2 cases)
        |""".stripMargin,
-    compat = Map("3" -> """|case None => scala
-                           |case Some(value) => scala
-                           |case (exhaustive) Option (2 cases)
-                           |""".stripMargin),
   )
 
   check(
@@ -330,13 +326,9 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  }
       |}""".stripMargin,
     """|case None => scala
-       |case (exhaustive) Option[A] (2 cases)
        |case Some(value) => scala
+       |case (exhaustive) Option[A] (2 cases)
        |""".stripMargin,
-    compat = Map("3" -> """|case None => scala
-                           |case Some(value) => scala
-                           |case (exhaustive) Option (2 cases)
-                           |""".stripMargin),
   )
 
   check(
@@ -348,13 +340,9 @@ class CompletionCaseSuite extends BaseCompletionSuite {
       |  }
       |}""".stripMargin,
     """|case None => scala
-       |case (exhaustive) Option[A] (2 cases)
        |case Some(value) => scala
+       |case (exhaustive) Option[A] (2 cases)
        |""".stripMargin,
-    compat = Map("3" -> """|case None => scala
-                           |case Some(value) => scala
-                           |case (exhaustive) Option (2 cases)
-                           |""".stripMargin),
   )
 
   check(

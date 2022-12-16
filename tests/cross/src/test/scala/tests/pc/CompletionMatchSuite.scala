@@ -499,17 +499,10 @@ class CompletionMatchSuite extends BaseCompletionSuite {
     s"""
        |object A {
        |  List(Option(1)).map{
-       |\tcase None => $$0
-       |\tcase Some(value) =>
+       |\tcase Some(value) => $$0
+       |\tcase None =>
        |}
        |}""".stripMargin,
-    compat = Map("3" -> s"""
-                           |object A {
-                           |  List(Option(1)).map{
-                           |\tcase Some(value) => $$0
-                           |\tcase None =>
-                           |}
-                           |}""".stripMargin),
     filter = _.contains("exhaustive"),
   )
 

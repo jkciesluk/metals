@@ -446,6 +446,7 @@ trait Completions { this: MetalsGlobal =>
             EmptyTree,
             editRange,
             pos,
+            source,
             text,
             apply,
             includeExhaustiveCase = true
@@ -491,6 +492,7 @@ trait Completions { this: MetalsGlobal =>
           selector,
           editRange,
           pos,
+          source,
           text,
           parent
         )
@@ -499,6 +501,7 @@ trait Completions { this: MetalsGlobal =>
           selector,
           editRange,
           pos,
+          source,
           text,
           parent,
           patternOnly = Some(name.stripSuffix("_CURSOR_"))
@@ -508,6 +511,7 @@ trait Completions { this: MetalsGlobal =>
           selector,
           editRange,
           pos,
+          source,
           text,
           parent,
           patternOnly = Some(name.stripSuffix("_CURSOR_")),

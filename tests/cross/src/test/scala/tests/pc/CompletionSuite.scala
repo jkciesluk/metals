@@ -934,16 +934,17 @@ class CompletionSuite extends BaseCompletionSuite {
         |    case Som@@
         |}
         |""".stripMargin,
-    """|Some scala
+    """|Some(value) scala
        |""".stripMargin,
     compat = Map(
+      "2.11" -> "Some(x) scala",
       "3" ->
         """|Some(value) scala
            |Some scala
            |Some[A](value: A): Some[A]
            |SomeToExpr[T: Type: ToExpr]: SomeToExpr[T]
            |SomeFromExpr[T](using Type[T], FromExpr[T]): SomeFromExpr[T]
-           |""".stripMargin
+           |""".stripMargin,
     ),
   )
 
@@ -994,22 +995,17 @@ class CompletionSuite extends BaseCompletionSuite {
         |    case S@@
         |}
         |""".stripMargin,
-    """|Some scala
-       |Seq scala.collection
+    """|Some(value) scala
+       |Seq scala.collection.immutable
        |Set scala.collection.immutable
        |""".stripMargin,
     topLines = Some(3),
     compat = Map(
-      "2.13" ->
-        """|Some scala
+      "2.11" ->
+        """|Some(x) scala
            |Seq scala.collection.immutable
            |Set scala.collection.immutable
-           |""".stripMargin,
-      "3" ->
-        """|Some(value) scala
-           |Seq scala.collection.immutable
-           |Set scala.collection.immutable
-           |""".stripMargin,
+           |""".stripMargin
     ),
   )
 
@@ -1020,14 +1016,14 @@ class CompletionSuite extends BaseCompletionSuite {
         |    case _: S@@
         |}
         |""".stripMargin,
-    """|Some scala
+    """|Some[_] scala
        |Seq scala.collection
        |Set scala.collection.immutable
        |""".stripMargin,
     topLines = Some(3),
     compat = Map(
       "2.13" ->
-        """|Some scala
+        """|Some[_] scala
            |Seq scala.collection.immutable
            |Set scala.collection.immutable
            |""".stripMargin,
@@ -1053,18 +1049,11 @@ class CompletionSuite extends BaseCompletionSuite {
         |  }
         |}
         |""".stripMargin,
-    """|Number: Regex
-       |NotString: Int
+    """|NotString: Int
+       |Number: Regex
        |Nil scala.collection.immutable
        |""".stripMargin,
     topLines = Option(3),
-    compat = Map(
-      "3" ->
-        """|NotString: Int
-           |Nil scala.collection.immutable
-           |NoManifest scala.reflect
-           |""".stripMargin
-    ),
   )
 
   check(
