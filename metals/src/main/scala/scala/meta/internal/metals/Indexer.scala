@@ -399,7 +399,7 @@ final case class Indexer(
     for {
       (sourceItem, targets) <- data.sourceItemsToBuildTarget
       source <- sourceItem.listRecursive
-      if source.isScalaOrJava
+      if source.isScalaOrJava && !source.isDirectory
     } {
       targets.asScala.foreach { target =>
         data.linkSourceFile(target, source)
