@@ -123,7 +123,7 @@ case class ScalaPresentationCompiler(
   def didClose(uri: URI): Unit = {}
 
   override def semanticTokens(
-      params: VirtualFileParams
+      params: OffsetParams
   ): CompletableFuture[ju.List[Integer]] = {
 
     val empty: ju.List[Integer] = new ju.ArrayList[Integer]()

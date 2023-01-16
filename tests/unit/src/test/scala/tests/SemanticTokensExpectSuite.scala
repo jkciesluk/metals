@@ -1,6 +1,6 @@
 package tests
 
-import scala.meta.internal.metals.CompilerVirtualFileParams
+import scala.meta.internal.metals.CompilerOffsetParams
 import scala.meta.internal.metals.EmptyCancelToken
 import scala.meta.internal.metals.MetalsEnrichments._
 import scala.meta.internal.pc.ScalaPresentationCompiler
@@ -17,9 +17,10 @@ class SemanticTokensExpectSuite extends DirectoryExpectSuite("semanticTokens") {
         () => {
           val tokens = compiler
             .semanticTokens(
-              CompilerVirtualFileParams(
+              CompilerOffsetParams(
                 file.file.toURI,
                 file.code,
+                0,
                 EmptyCancelToken,
               )
             )

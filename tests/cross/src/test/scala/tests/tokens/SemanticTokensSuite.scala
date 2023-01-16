@@ -3,7 +3,7 @@ package tests.tokens
 import java.net.URI
 
 import scala.meta.internal.jdk.CollectionConverters._
-import scala.meta.internal.metals.CompilerVirtualFileParams
+import scala.meta.internal.metals.CompilerOffsetParams
 
 import munit.Location
 import munit.TestOptions
@@ -181,7 +181,7 @@ class SemanticTokensSuite extends BasePCSuite {
 
       val tokens = presentationCompiler
         .semanticTokens(
-          CompilerVirtualFileParams(URI.create("file:/Tokens.scala"), base)
+          CompilerOffsetParams(URI.create("file:/Tokens.scala"), base, 0)
         )
         .get()
 

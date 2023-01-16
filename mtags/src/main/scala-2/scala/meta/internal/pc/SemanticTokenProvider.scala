@@ -6,7 +6,7 @@ import scala.collection.mutable.ListBuffer
 
 import scala.meta.internal.jdk.CollectionConverters._
 import scala.meta.internal.pc.SemanticTokens._
-import scala.meta.pc.VirtualFileParams
+import scala.meta.pc.OffsetParams
 import scala.meta.tokens._
 
 import org.eclipse.lsp4j.SemanticTokenModifiers
@@ -18,7 +18,7 @@ import org.eclipse.lsp4j.SemanticTokenTypes
  */
 final class SemanticTokenProvider(
     protected val cp: MetalsGlobal, // compiler
-    val params: VirtualFileParams
+    val params: OffsetParams
 ) {
   import cp._
 
@@ -310,7 +310,10 @@ final class SemanticTokenProvider(
             if (sym.isGetter | sym.isSetter)
               getTypeId(SemanticTokenTypes.Variable)
             else getTypeId(SemanticTokenTypes.Method) // "def"
-          else if (sym.isTerm && (!sym.isParameter || sym.isParamAccessor)) {
+          else if (
+            sym.isTerm &&
+            (!sym.isParameter || sym.isParamAccessor || sym.owner.isClassConstructor)
+          ) {
             addPwrToMod(SemanticTokenModifiers.Readonly)
             getTypeId(SemanticTokenTypes.Variable) // "val"
           } else -1

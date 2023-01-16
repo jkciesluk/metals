@@ -22,8 +22,8 @@
 
   <<// anonymous classes>>/*comment*/
   <<@>>/*keyword*/<<deprecated>>/*class*/(
-    <<message>>/*parameter*/ = <<"a">>/*string*/,
-    <<since>>/*parameter*/ = <<susan>>/*variable,readonly*/,
+    <<message>>/*variable,readonly*/ = <<"a">>/*string*/,
+    <<since>>/*variable,readonly*/ = <<susan>>/*variable,readonly*/,
   ) <<def>>/*keyword*/ <<b>>/*method,deprecated*/ = <<1>>/*number*/
 
   <<// vararg>>/*comment*/

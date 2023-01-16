@@ -213,7 +213,7 @@ abstract class PcCollector[T](driver: InteractiveDriver, params: OffsetParams):
     end match
   end soughtSymbols
 
-  def result(): List[T] =
+  def result(allOccurences: Boolean = false): List[T] =
     // Now find all matching symbols in the document, comments identify <<>> as the symbol we are looking for
     soughtSymbols(path) match
       case Some(sought, _) =>

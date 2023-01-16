@@ -431,10 +431,10 @@ class Compilers(
             }
           }
 
-          val vFile =
-            CompilerVirtualFileParams(path.toNIO.toUri(), input.text, token)
+          val offsetParams =
+            CompilerOffsetParams(path.toNIO.toUri(), input.text, 0, token)
           compiler
-            .semanticTokens(vFile)
+            .semanticTokens(offsetParams)
             .asScala
             .map { plist =>
               new SemanticTokens(

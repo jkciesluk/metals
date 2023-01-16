@@ -88,7 +88,7 @@ case class ScalaPresentationCompiler(
     new MetalsDriver(settings)
 
   override def semanticTokens(
-      params: VirtualFileParams
+      params: OffsetParams
   ): CompletableFuture[ju.List[Integer]] =
     CompletableFuture.completedFuture {
       new ju.ArrayList[Integer]()

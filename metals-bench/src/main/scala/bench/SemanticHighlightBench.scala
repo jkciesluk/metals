@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import java.{util => ju}
 
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.metals.CompilerVirtualFileParams
+import scala.meta.internal.metals.CompilerOffsetParams
 import scala.meta.internal.metals.EmptyCancelToken
 import scala.meta.io.AbsolutePath
 
@@ -71,9 +71,10 @@ class SemanticHighlightBench extends PcBenchmark {
   def semanticHighlight(): ju.List[Integer] = {
     val pc = presentationCompiler()
     val text = currentHighlight
-    val vFile = CompilerVirtualFileParams(
+    val vFile = CompilerOffsetParams(
       URI.create(s"file://${currentHighlightRequest}"),
       text,
+      0,
       EmptyCancelToken,
     )
 

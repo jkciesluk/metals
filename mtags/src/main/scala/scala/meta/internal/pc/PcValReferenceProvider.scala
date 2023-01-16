@@ -5,7 +5,7 @@ import org.eclipse.{lsp4j => l}
 trait PcValReferenceProvider {
   val text: Array[Char]
   val position: l.Position
-  def result(): List[Occurrence]
+  def result(allOccurences: Boolean = false): List[Occurrence]
   def defAndRefs(): Option[(Definition, List[Reference])] = {
     val allOccurences = result()
     val references: List[Reference] = allOccurences.collect {
