@@ -15,7 +15,8 @@ object SaveExpect {
       new FoldingRangeScala2Suite,
       new FoldingRangeScala3Suite,
       new WorkspaceSymbolExpectSuite,
-      new SemanticTokensExpectSuite,
+      new SemanticTokensExpectScala2Suite,
+      new SemanticTokensExpectScala3Suite,
     ).foreach { suite =>
       val header = suite.suiteName.length + 2
       println("=" * header)

@@ -29,6 +29,7 @@ import dotty.tools.dotc.interactive.InteractiveDriver
 import dotty.tools.dotc.util.SourceFile
 import dotty.tools.dotc.util.SourcePosition
 import dotty.tools.dotc.util.Spans.Span
+import dotty.tools.dotc.ast.untpd.ImportSelector
 
 abstract class PcCollector[T](driver: InteractiveDriver, params: OffsetParams):
   private val caseClassSynthetics: Set[Name] = Set(nme.apply, nme.copy)
@@ -56,8 +57,9 @@ abstract class PcCollector[T](driver: InteractiveDriver, params: OffsetParams):
     case TypeApply(sel: Select, _) :: tail if sel.span.contains(pos.span) =>
       Interactive.pathTo(sel, pos.span) ::: rawPath
     case _ => rawPath
-
-  def collect(parent: Option[Tree])(tree: Tree, pos: SourcePosition): T
+  def collect(
+      parent: Option[Tree]
+  )(tree: Tree, pos: SourcePosition, symbol: Option[Symbol]): T
 
   def adjust(
       pos: SourcePosition,
@@ -212,11 +214,19 @@ abstract class PcCollector[T](driver: InteractiveDriver, params: OffsetParams):
         }
     end match
   end soughtSymbols
-
   def result(allOccurences: Boolean = false): List[T] =
-    // Now find all matching symbols in the document, comments identify <<>> as the symbol we are looking for
+    if allOccurences then resultAllOccurences().toList
+    else resultWithSought()
+
+  def resultAllOccurences(): Set[T] =
+    def noTreeFilter = (tree: Tree) => true
+    def noSoughtFilter = (f: Set[Symbol] => Boolean) => true
+
+    traverseSought(noTreeFilter, noSoughtFilter)
+
+  def resultWithSought(): List[T] =
     soughtSymbols(path) match
-      case Some(sought, _) =>
+      case Some((sought, _)) =>
         lazy val owners = sought
           .flatMap { s => Set(s.owner, s.owner.companionModule) }
           .filter(_ != NoSymbol)
@@ -248,143 +258,179 @@ abstract class PcCollector[T](driver: InteractiveDriver, params: OffsetParams):
 
         lazy val extensionParam = sought.exists(isExtensionParam)
 
-        def collectNamesWithParent(
-            occurences: Set[T],
-            tree: Tree,
-            parent: Option[Tree],
-        ): Set[T] =
-          def collect = this.collect(parent)
+        def soughtTreeFilter(tree: Tree): Boolean =
           tree match
-            /**
-             * All indentifiers such as:
-             * val a = <<b>>
-             */
             case ident: Ident
-                if !ident.span.isZeroExtent &&
-                  (soughtOrOverride(ident.symbol) ||
-                    isForComprehensionOwner(ident) ||
-                    (extensionParam && isExtensionParam(ident.symbol))) =>
-              // symbols will differ for params in different ext methods, but source pos will be the same
-              if sought.exists(_.sourcePos == ident.symbol.sourcePos) then
-                occurences + collect(
-                  ident,
-                  ident.sourcePos,
-                )
-              else occurences
-            /**
-             * All select statements such as:
-             * val a = hello.<<b>>
-             */
-            case sel: Select
-                if soughtOrOverride(sel.symbol) && !sel.span.isZeroExtent =>
-              occurences + collect(
-                sel,
-                pos.withSpan(selectNameSpan(sel)),
-              )
-            /* all definitions:
-             * def <<foo>> = ???
-             * class <<Foo>> = ???
-             * etc.
-             */
+                if (soughtOrOverride(ident.symbol) ||
+                  isForComprehensionOwner(ident) ||
+                  (extensionParam && isExtensionParam(ident.symbol))) =>
+              true
+            case sel: Select if soughtOrOverride(sel.symbol) => true
             case df: NamedDefTree
-                if soughtOrOverride(df.symbol) &&
-                  !df.span.isZeroExtent && !df.symbol.isSetter &&
-                  !isGeneratedGiven(df) =>
-              occurences + collect(
-                df,
-                pos.withSpan(df.nameSpan),
-              )
-            /* Named parameters don't have symbol so we need to check the owner
-             * foo(<<name>> = "abc")
-             * User(<<name>> = "abc")
-             * etc.
-             */
-            case apply: Apply =>
-              val namedParam = apply.args.collectFirst {
-                case arg: NamedArg
-                    if sought.exists(sym =>
-                      sym.name == arg.name &&
-                        // foo(name = "123") for normal params
-                        (sym.owner == apply.symbol ||
-                          // Bar(name = "123") for case class, copy and apply methods
-                          apply.symbol.is(Flags.Synthetic) &&
-                          (sym.owner == apply.symbol.owner.companion || sym.owner == apply.symbol.owner))
-                    ) =>
-                  arg
-              }
-              namedParam match
-                case Some(arg) =>
-                  val realName = arg.name.stripModuleClassSuffix.lastPart
-                  occurences + collect(
-                    arg,
-                    pos
-                      .withSpan(
-                        arg.span.withEnd(arg.span.start + realName.length)
-                      ),
-                  )
+                if soughtOrOverride(df.symbol) && !df.symbol.isSetter =>
+              true
+            case imp: Import if owners(imp.expr.symbol) => true
+            case _ => false
 
-                case None =>
-                  occurences
-              end match
-            /**
-             * For traversing annotations:
-             * @<<JsonNotification>>("")
-             * def params() = ???
-             */
-            case mdf: MemberDef if mdf.mods.annotations.nonEmpty =>
-              val trees = collectTrees(mdf.mods.annotations)
-              val traverser =
-                new PcCollector.DeepFolderWithParent[Set[T]](
-                  collectNamesWithParent
-                )
-              trees.foldLeft(occurences) { case (set, tree) =>
-                traverser(set, tree)
-              }
-            /**
-             * For traversing import selectors:
-             * import scala.util.<<Try>>
-             */
-            case imp: Import if owners(imp.expr.symbol) =>
-              imp.selectors
-                .collect {
-                  case sel if soughtNames(sel.name) =>
-                    // Show both rename and main together
-                    val spans =
-                      if (!sel.renamed.isEmpty) then
-                        Set(sel.renamed.span, sel.imported.span)
-                      else Set(sel.imported.span)
-                    spans.filter(!_.isZeroExtent).map { span =>
-                      collect(
-                        imp,
-                        pos.withSpan(span),
-                      )
-                    }
-                }
-                .flatten
-                .toSet ++ occurences
-            case inl: Inlined =>
-              val traverser =
-                new PcCollector.DeepFolderWithParent[Set[T]](
-                  collectNamesWithParent
-                )
-              val trees = inl.call :: inl.expansion :: inl.bindings
-              trees.foldLeft(occurences) { case (set, tree) =>
-                traverser(set, tree)
-              }
-            case o =>
-              occurences
-          end match
-        end collectNamesWithParent
+        def soughtFilter(f: Set[Symbol] => Boolean): Boolean =
+          f(sought)
 
-        val traverser =
-          new PcCollector.DeepFolderWithParent[Set[T]](collectNamesWithParent)
-        val all = traverser(Set.empty[T], unit.tpdTree)
+        traverseSought(soughtTreeFilter, soughtFilter).toList
 
-        all.toList
       case None => Nil
-    end match
 
-  end result
+  def traverseSought(
+      filter: Tree => Boolean,
+      soughtFilter: (Set[Symbol] => Boolean) => Boolean,
+  ): Set[T] =
+    def collectNamesWithParent(
+        occurences: Set[T],
+        tree: Tree,
+        parent: Option[Tree],
+    ): Set[T] =
+      def collect(
+          tree: Tree,
+          pos: SourcePosition,
+          symbol: Option[Symbol] = None,
+      ) =
+        this.collect(parent)(tree, pos, symbol)
+
+      tree match
+        /**
+         * All indentifiers such as:
+         * val a = <<b>>
+         */
+        case ident: Ident if !ident.span.isZeroExtent && filter(ident) =>
+          // symbols will differ for params in different ext methods, but source pos will be the same
+          if soughtFilter(sought =>
+              sought.exists(_.sourcePos == ident.symbol.sourcePos)
+            )
+          then
+            occurences + collect(
+              ident,
+              ident.sourcePos,
+            )
+          else occurences
+        /**
+         * All select statements such as:
+         * val a = hello.<<b>>
+         */
+        case sel: Select if !sel.span.isZeroExtent && filter(sel) =>
+          occurences + collect(
+            sel,
+            pos.withSpan(selectNameSpan(sel)),
+          )
+        /* all definitions:
+         * def <<foo>> = ???
+         * class <<Foo>> = ???
+         * etc.
+         */
+        case df: NamedDefTree if !df.span.isZeroExtent && filter(df) =>
+          val annots = collectTrees(df.mods.annotations)
+          val traverser =
+            new PcCollector.DeepFolderWithParent[Set[T]](
+              collectNamesWithParent
+            )
+          annots.foldLeft(
+            occurences + collect(
+              df,
+              pos.withSpan(df.nameSpan),
+            )
+          ) { case (set, tree) =>
+            traverser(set, tree)
+          }
+
+        /* Named parameters don't have symbol so we need to check the owner
+         * foo(<<name>> = "abc")
+         * User(<<name>> = "abc")
+         * etc.
+         */
+        case apply: Apply =>
+          val args: List[NamedArg] = apply.args.collect {
+            case arg: NamedArg
+                if soughtFilter(sought =>
+                  sought.exists(sym =>
+                    sym.name == arg.name &&
+                      // foo(name = "123") for normal params
+                      (sym.owner == apply.symbol ||
+                        // Bar(name = "123") for case class, copy and apply methods
+                        apply.symbol.is(Flags.Synthetic) &&
+                        (sym.owner == apply.symbol.owner.companion || sym.owner == apply.symbol.owner))
+                  )
+                ) =>
+              arg
+          }
+          val named = args.map { arg =>
+            val realName = arg.name.stripModuleClassSuffix.lastPart
+            collect(
+              arg,
+              pos
+                .withSpan(
+                  arg.span.withEnd(arg.span.start + realName.length)
+                ),
+            )
+          }
+          occurences ++ named
+
+        /**
+         * For traversing annotations:
+         * @<<JsonNotification>>("")
+         * def params() = ???
+         */
+        case mdf: MemberDef if mdf.mods.annotations.nonEmpty =>
+          val trees = collectTrees(mdf.mods.annotations)
+          val traverser =
+            new PcCollector.DeepFolderWithParent[Set[T]](
+              collectNamesWithParent
+            )
+          trees.foldLeft(occurences) { case (set, tree) =>
+            traverser(set, tree)
+          }
+        /**
+         * For traversing import selectors:
+         * import scala.util.<<Try>>
+         */
+        case imp: Import if filter(imp) =>
+          imp.selectors
+            .collect {
+              case sel: ImportSelector
+                  if soughtFilter(sought =>
+                    sought.exists(_.name == sel.name)
+                  ) =>
+                // Show both rename and main together
+                val spans =
+                  if (!sel.renamed.isEmpty) then
+                    Set(sel.renamed.span, sel.imported.span)
+                  else Set(sel.imported.span)
+                spans.map { span =>
+                  collect(
+                    imp,
+                    pos.withSpan(span),
+                    Some(imp.expr.symbol.info.member(sel.name).symbol),
+                  )
+                }
+            }
+            .flatten
+            .toSet ++ occurences
+        case inl: Inlined =>
+          val traverser =
+            new PcCollector.DeepFolderWithParent[Set[T]](
+              collectNamesWithParent
+            )
+          val trees = inl.call :: inl.expansion :: inl.bindings
+          trees.foldLeft(occurences) { case (set, tree) =>
+            traverser(set, tree)
+          }
+        case o =>
+          occurences
+      end match
+    end collectNamesWithParent
+
+    val traverser =
+      new PcCollector.DeepFolderWithParent[Set[T]](collectNamesWithParent)
+    val all = traverser(Set.empty[T], unit.tpdTree)
+    all
+  end traverseSought
 
   // @note (tgodzik) Not sure currently how to get rid of the warning, but looks to correctly
   // @nowarn

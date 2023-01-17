@@ -1,13 +1,18 @@
 package tests
 
+import scala.meta.internal.metals.{BuildInfo => V}
 import scala.meta.internal.metals.CompilerOffsetParams
 import scala.meta.internal.metals.EmptyCancelToken
 import scala.meta.internal.metals.MetalsEnrichments._
 import scala.meta.internal.pc.ScalaPresentationCompiler
 
-class SemanticTokensExpectSuite extends DirectoryExpectSuite("semanticTokens") {
+abstract class SemanticTokensExpectSuite(
+    directoryName: String,
+    inputProperties: => InputProperties,
+    scalaVersion: String,
+) extends DirectoryExpectSuite(directoryName) {
 
-  override lazy val input: InputProperties = InputProperties.scala2()
+  override lazy val input: InputProperties = inputProperties
   private val compiler = new ScalaPresentationCompiler()
 
   override def testCases(): List[ExpectTestCase] = {
@@ -38,3 +43,18 @@ class SemanticTokensExpectSuite extends DirectoryExpectSuite("semanticTokens") {
     compiler.shutdown()
   }
 }
+
+class SemanticTokensExpectScala2Suite
+    extends SemanticTokensExpectSuite(
+      "semanticTokens",
+      InputProperties.scala2(),
+      V.scala213,
+    )
+
+class SemanticTokensExpectScala3Suite
+    extends SemanticTokensExpectSuite(
+      "semanticTokens-scala3",
+      InputProperties.scala3(),
+      V.scala3,
+      ScalaPresentationCompiler(),
+    )

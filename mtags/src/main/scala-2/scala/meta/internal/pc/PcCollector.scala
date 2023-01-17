@@ -9,7 +9,10 @@ abstract class PcCollector[T](
 ) {
   import compiler._
 
-  def collect(parent: Option[Tree])(tree: Tree, pos: Position): T
+  def collect(
+      parent: Option[Tree]
+  )(tree: Tree, pos: Position, symbol: Option[Symbol]): T
+
   val unit: RichCompilationUnit = addCompilationUnit(
     code = params.text(),
     filename = params.uri().toString(),
@@ -283,7 +286,8 @@ abstract class PcCollector[T](
       val traverse: (Set[T], Tree) => Set[T] = traverseWithParent(
         Some(tree)
       )
-      val collect: (Tree, Position) => T = this.collect(parent)
+      def collect(tree: Tree, pos: Position, symbol: Option[Symbol] = None) =
+        this.collect(parent)(tree, pos, symbol)
       tree match {
         /**
          * All indentifiers such as:
