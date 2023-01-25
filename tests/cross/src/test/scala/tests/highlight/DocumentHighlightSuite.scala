@@ -699,4 +699,11 @@ class DocumentHighlightSuite extends BaseDocumentHighlightSuite {
        |}""".stripMargin,
   )
 
+  check(
+    "select-parentheses",
+    """|object Main {
+       |  val a = (1 + 2 + 3).<<toStr@@ing>>
+       |}""".stripMargin,
+  )
+
 }
