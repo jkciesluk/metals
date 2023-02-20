@@ -2,15 +2,15 @@
 
 <<class>>/*keyword*/ <<Miscellaneous>>/*class*/ {
   <<// backtick identifier>>/*comment*/
-  <<val>>/*keyword*/ <<`a b`>>/*variable,readonly*/ = <<42>>/*number*/
+  <<val>>/*keyword*/ <<`a b`>>/*variable,readonly*/ <<=>>/*operator*/ <<42>>/*number*/
 
   <<// block with only wildcard value>>/*comment*/
-  <<def>>/*keyword*/ <<apply>>/*method*/(): <<Unit>>/*class,abstract*/ = {
-    <<val>>/*keyword*/ <<_>>/*variable*/ = <<42>>/*number*/
+  <<def>>/*keyword*/ <<apply>>/*method*/()<<:>>/*operator*/ <<Unit>>/*class,abstract*/ <<=>>/*operator*/ {
+    <<val>>/*keyword*/ <<_>>/*variable*/ <<=>>/*operator*/ <<42>>/*number*/
   }
   <<// infix + inferred apply/implicits/tparams>>/*comment*/
   (<<List>>/*variable,readonly*/(<<1>>/*number*/)
-    .<<map>>/*method*/(<<_>>/*variable*/ <<+>>/*method*/ <<1>>/*number*/)
-    <<++>>/*method*/
+    .<<map>>/*method*/(<<_>>/*variable*/ <<+>>/*operator*/ <<1>>/*number*/)
+    <<++>>/*operator*/
       <<List>>/*variable,readonly*/(<<3>>/*number*/))
 }

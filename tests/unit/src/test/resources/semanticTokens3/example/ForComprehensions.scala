@@ -7,7 +7,7 @@
     <<if>>/*keyword*/ (
       <<a>>/*parameter*/,
       <<b>>/*parameter*/,
-    ) <<==>>/*method*/ (<<1>>/*number*/, <<2>>/*number*/)
+    ) <<==>>/*operator*/ (<<1>>/*number*/, <<2>>/*number*/)
     (
       <<c>>/*variable,readonly*/,
       <<d>>/*variable,readonly*/,
@@ -17,14 +17,14 @@
       <<b>>/*parameter*/,
       <<c>>/*variable,readonly*/,
       <<d>>/*variable,readonly*/,
-    ) <<==>>/*method*/ (<<1>>/*number*/, <<2>>/*number*/, <<3>>/*number*/, <<4>>/*number*/)
-    <<e>>/*variable,readonly*/ = (
+    ) <<==>>/*operator*/ (<<1>>/*number*/, <<2>>/*number*/, <<3>>/*number*/, <<4>>/*number*/)
+    <<e>>/*variable,readonly*/ <<=>>/*operator*/ (
       <<a>>/*parameter*/,
       <<b>>/*parameter*/,
       <<c>>/*variable,readonly*/,
       <<d>>/*variable,readonly*/,
     )
-    <<if>>/*keyword*/ <<e>>/*variable,readonly*/ <<==>>/*method*/ (<<1>>/*number*/, <<2>>/*number*/, <<3>>/*number*/, <<4>>/*number*/)
+    <<if>>/*keyword*/ <<e>>/*variable,readonly*/ <<==>>/*operator*/ (<<1>>/*number*/, <<2>>/*number*/, <<3>>/*number*/, <<4>>/*number*/)
     <<f>>/*parameter*/ <<<->>/*operator*/ <<List>>/*variable,readonly*/(<<e>>/*variable,readonly*/)
   } <<yield>>/*keyword*/ {
     (

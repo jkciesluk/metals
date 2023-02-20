@@ -1,5 +1,5 @@
 <<package>>/*keyword*/ <<example>>/*namespace*/
 
-<<enum>>/*keyword*/ <<FooEnum>>/*enum,abstract*/:
+<<enum>>/*keyword*/ <<FooEnum>>/*enum,abstract*/<<:>>/*operator*/
   <<case>>/*keyword*/ <<Bar>>/*enum*/, <<Baz>>/*enum*/
 <<object>>/*keyword*/ <<FooEnum>>/*class*/

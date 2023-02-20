@@ -170,6 +170,8 @@ abstract class SemTokenProvider {
       case _: Token.Underscore => getTypeId(SemanticTokenTypes.Variable)
       case _: Token.TypeLambdaArrow => getTypeId(SemanticTokenTypes.Operator)
       case _: Token.ContextArrow => getTypeId(SemanticTokenTypes.Operator)
+      case _: Token.SymbolicKeyword =>
+        getTypeId(SemanticTokenTypes.Operator)
 
       // Constant
       case _: Token.Constant.Int | _: Token.Constant.Long |
@@ -189,6 +191,10 @@ abstract class SemTokenProvider {
           _: Token.Interpolation.SpliceEnd | _: Token.Interpolation.End =>
         getTypeId(SemanticTokenTypes.String) // $ symbol
 
+      // Operator
+      case id: Token.Ident if isOperatorName(id) =>
+        getTypeId(SemanticTokenTypes.Operator)
+
       // Default
       case _ =>
         trySoftKeyword(tk)
@@ -196,7 +202,7 @@ abstract class SemTokenProvider {
 
   }
   def isOperatorName(ident: Token.Ident): Boolean =
-    (ident.name.last: @switch) match {
+    (ident.value.last: @switch) match {
       case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' |
           '?' | ':' | '=' | '&' | '|' | '/' | '\\' =>
         true

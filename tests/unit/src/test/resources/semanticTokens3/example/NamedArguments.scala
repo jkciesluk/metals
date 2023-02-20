@@ -1,34 +1,34 @@
 <<package>>/*keyword*/ <<example>>/*namespace*/
 
 <<case>>/*keyword*/ <<class>>/*keyword*/ <<User>>/*class*/(
-    <<name>>/*variable,readonly*/: <<String>>/*type*/ = {
+    <<name>>/*variable,readonly*/<<:>>/*operator*/ <<String>>/*type*/ <<=>>/*operator*/ {
       <<// assert default values have occurrences>>/*comment*/
       <<Map>>/*variable,readonly*/.<<toString>>/*method*/
     }
 )
 <<object>>/*keyword*/ <<NamedArguments>>/*class*/ {
-  <<final>>/*modifier*/ <<val>>/*keyword*/ <<susan>>/*variable,readonly*/ = <<"Susan">>/*string*/
-  <<val>>/*keyword*/ <<user1>>/*variable,readonly*/ =
+  <<final>>/*modifier*/ <<val>>/*keyword*/ <<susan>>/*variable,readonly*/ <<=>>/*operator*/ <<"Susan">>/*string*/
+  <<val>>/*keyword*/ <<user1>>/*variable,readonly*/ <<=>>/*operator*/
     <<User>>/*class*/
       .<<apply>>/*method*/(
-        <<name>>/*parameter*/ = <<"John">>/*string*/
+        <<name>>/*parameter*/ <<=>>/*operator*/ <<"John">>/*string*/
       )
-  <<val>>/*keyword*/ <<user2>>/*variable,readonly*/: <<User>>/*class*/ =
+  <<val>>/*keyword*/ <<user2>>/*variable,readonly*/<<:>>/*operator*/ <<User>>/*class*/ <<=>>/*operator*/
     <<User>>/*class*/(
-      <<name>>/*parameter*/ = <<susan>>/*variable,readonly*/
+      <<name>>/*parameter*/ <<=>>/*operator*/ <<susan>>/*variable,readonly*/
     ).<<copy>>/*method*/(
-      <<name>>/*parameter*/ = <<susan>>/*variable,readonly*/
+      <<name>>/*parameter*/ <<=>>/*operator*/ <<susan>>/*variable,readonly*/
     )
 
   <<// anonymous classes>>/*comment*/
   <<@>>/*keyword*/<<deprecated>>/*class*/(
-    <<message>>/*parameter*/ = <<"a">>/*string*/,
-    <<since>>/*parameter*/ = <<susan>>/*variable,readonly*/,
-  ) <<def>>/*keyword*/ <<b>>/*method,deprecated*/ = <<1>>/*number*/
+    <<message>>/*parameter*/ <<=>>/*operator*/ <<"a">>/*string*/,
+    <<since>>/*parameter*/ <<=>>/*operator*/ <<susan>>/*variable,readonly*/,
+  ) <<def>>/*keyword*/ <<b>>/*method,deprecated*/ <<=>>/*operator*/ <<1>>/*number*/
 
   <<// vararg>>/*comment*/
   <<List>>/*variable,readonly*/(
-    elems = <<2>>/*number*/
+    elems <<=>>/*operator*/ <<2>>/*number*/
   )
 
 }

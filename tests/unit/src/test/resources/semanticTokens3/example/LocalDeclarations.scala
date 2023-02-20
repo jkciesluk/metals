@@ -1,21 +1,21 @@
 <<package>>/*keyword*/ <<example>>/*namespace*/.<<nested>>/*namespace*/
 
-<<trait>>/*keyword*/ <<LocalDeclarations>>/*interface,abstract*/:
-  <<def>>/*keyword*/ <<foo>>/*method*/(): <<Unit>>/*class,abstract*/
+<<trait>>/*keyword*/ <<LocalDeclarations>>/*interface,abstract*/<<:>>/*operator*/
+  <<def>>/*keyword*/ <<foo>>/*method*/()<<:>>/*operator*/ <<Unit>>/*class,abstract*/
 
-<<trait>>/*keyword*/ <<Foo>>/*interface,abstract*/:
-  <<val>>/*keyword*/ <<y>>/*variable,readonly*/ = <<3>>/*number*/
+<<trait>>/*keyword*/ <<Foo>>/*interface,abstract*/<<:>>/*operator*/
+  <<val>>/*keyword*/ <<y>>/*variable,readonly*/ <<=>>/*operator*/ <<3>>/*number*/
 
-<<object>>/*keyword*/ <<LocalDeclarations>>/*class*/:
-  <<def>>/*keyword*/ <<create>>/*method*/(): <<LocalDeclarations>>/*interface,abstract*/ =
-    <<def>>/*keyword*/ <<bar>>/*method*/(): <<Unit>>/*class,abstract*/ = ()
+<<object>>/*keyword*/ <<LocalDeclarations>>/*class*/<<:>>/*operator*/
+  <<def>>/*keyword*/ <<create>>/*method*/()<<:>>/*operator*/ <<LocalDeclarations>>/*interface,abstract*/ <<=>>/*operator*/
+    <<def>>/*keyword*/ <<bar>>/*method*/()<<:>>/*operator*/ <<Unit>>/*class,abstract*/ <<=>>/*operator*/ ()
 
-    <<val>>/*keyword*/ <<x>>/*variable,readonly*/ = <<new>>/*keyword*/:
-      <<val>>/*keyword*/ <<x>>/*variable,readonly*/ = <<2>>/*number*/
+    <<val>>/*keyword*/ <<x>>/*variable,readonly*/ <<=>>/*operator*/ <<new>>/*keyword*/<<:>>/*operator*/
+      <<val>>/*keyword*/ <<x>>/*variable,readonly*/ <<=>>/*operator*/ <<2>>/*number*/
 
-    <<val>>/*keyword*/ <<y>>/*variable,readonly*/ = <<new>>/*keyword*/ <<Foo>>/*interface,abstract*/ {}
+    <<val>>/*keyword*/ <<y>>/*variable,readonly*/ <<=>>/*operator*/ <<new>>/*keyword*/ <<Foo>>/*interface,abstract*/ {}
 
     <<y>>/*variable,readonly*/.<<y>>/*variable,readonly*/
 
-    <<new>>/*keyword*/ <<LocalDeclarations>>/*interface,abstract*/ <<with>>/*keyword*/ <<Foo>>/*interface,abstract*/:
-      <<override>>/*modifier*/ <<def>>/*keyword*/ <<foo>>/*method*/(): <<Unit>>/*class,abstract*/ = <<bar>>/*method*/()
+    <<new>>/*keyword*/ <<LocalDeclarations>>/*interface,abstract*/ <<with>>/*keyword*/ <<Foo>>/*interface,abstract*/<<:>>/*operator*/
+      <<override>>/*modifier*/ <<def>>/*keyword*/ <<foo>>/*method*/()<<:>>/*operator*/ <<Unit>>/*class,abstract*/ <<=>>/*operator*/ <<bar>>/*method*/()
