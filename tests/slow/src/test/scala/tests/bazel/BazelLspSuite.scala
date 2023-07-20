@@ -29,45 +29,6 @@ class BazelLspSuite
       workspace: AbsolutePath
   ): Option[String] = BazelDigest.current(workspace)
 
-  test("basic") {
-    cleanWorkspace()
-    for {
-      _ <- initialize(
-        BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion)
-      )
-      _ = assertNoDiff(
-        client.workspaceMessageRequests,
-        List(
-          importBuildMessage,
-          // create .bazelbsp progress message
-          BazelBuildTool.mainClass,
-          allProjectsMisconfiguredMessage,
-        ).mkString("\n"),
-      )
-      _ = assert(bazelBspConfig.exists)
-      _ = client.messageRequests.clear() // restart
-      _ = assertStatus(_.isInstalled)
-      _ <- server.didChange("WORKSPACE")(_ + "\n# comment")
-      _ <- server.didSave("WORKSPACE")(identity)
-      // Comment changes do not trigger "re-import project" request
-      _ = assertNoDiff(client.workspaceMessageRequests, "")
-      _ <- server.didChange(s"$cmdPath/BUILD") { text =>
-        text.replace("runner", "runner1")
-      }
-      _ = assertNoDiff(client.workspaceMessageRequests, "")
-      _ = client.importBuildChanges = ImportBuildChanges.yes
-      _ <- server.didSave(s"$cmdPath/BUILD")(identity)
-    } yield {
-      assertNoDiff(
-        client.workspaceMessageRequests,
-        List(
-          importBuildChangesMessage
-        ).mkString("\n"),
-      )
-      server.assertBuildServerConnection()
-    }
-  }
-
   test("generate-bsp-config") {
     cleanWorkspace()
     writeLayout(BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion))
@@ -128,6 +89,45 @@ class BazelLspSuite
         ).mkString("\n"),
       )
       assert(bazelBspConfig.exists)
+      server.assertBuildServerConnection()
+    }
+  }
+
+  test("basic") {
+    cleanWorkspace()
+    for {
+      _ <- initialize(
+        BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion)
+      )
+      _ = assertNoDiff(
+        client.workspaceMessageRequests,
+        List(
+          importBuildMessage,
+          // create .bazelbsp progress message
+          BazelBuildTool.mainClass,
+          allProjectsMisconfiguredMessage,
+        ).mkString("\n"),
+      )
+      _ = assert(bazelBspConfig.exists)
+      _ = client.messageRequests.clear() // restart
+      _ = assertStatus(_.isInstalled)
+      _ <- server.didChange("WORKSPACE")(_ + "\n# comment")
+      _ <- server.didSave("WORKSPACE")(identity)
+      // Comment changes do not trigger "re-import project" request
+      _ = assertNoDiff(client.workspaceMessageRequests, "")
+      _ <- server.didChange(s"$cmdPath/BUILD") { text =>
+        text.replace("runner", "runner1")
+      }
+      _ = assertNoDiff(client.workspaceMessageRequests, "")
+      _ = client.importBuildChanges = ImportBuildChanges.yes
+      _ <- server.didSave(s"$cmdPath/BUILD")(identity)
+    } yield {
+      assertNoDiff(
+        client.workspaceMessageRequests,
+        List(
+          importBuildChangesMessage
+        ).mkString("\n"),
+      )
       server.assertBuildServerConnection()
     }
   }
