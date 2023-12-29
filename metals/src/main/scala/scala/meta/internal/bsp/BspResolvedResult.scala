@@ -14,7 +14,6 @@ case object ResolvedNone extends BspResolvedResult
 case object ResolvedBloop extends BspResolvedResult
 
 /** WORKSPACE file is found, but bsp connection not found. */
-case object ResolvedBazel extends BspResolvedResult
 case class ResolvedBspOne(details: BspConnectionDetails)
     extends BspResolvedResult
 case class ResolvedMultiple(md5: String, details: List[BspConnectionDetails])

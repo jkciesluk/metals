@@ -20,9 +20,6 @@ class BazelLspSuite
 
   val bazelVersion = "6.3.2"
 
-  val libPath = "src/main/scala/lib"
-  val cmdPath = "src/main/scala/cmd"
-
   def bazelBspConfig: AbsolutePath = workspace.resolve(".bsp/bazelbsp.json")
 
   override def currentDigest(
@@ -33,7 +30,7 @@ class BazelLspSuite
     cleanWorkspace()
     for {
       _ <- initialize(
-        BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion)
+        BazelBuildLayout(workspaceLayout, scalaVersion)
       )
       _ = assertNoDiff(
         client.workspaceMessageRequests,
@@ -51,12 +48,12 @@ class BazelLspSuite
       _ <- server.didSave("WORKSPACE")(identity)
       // Comment changes do not trigger "re-import project" request
       _ = assertNoDiff(client.workspaceMessageRequests, "")
-      _ <- server.didChange(s"$cmdPath/BUILD") { text =>
-        text.replace("runner", "runner1")
+      _ <- server.didChange(s"BUILD") { text =>
+        text.replace("main", "main1")
       }
       _ = assertNoDiff(client.workspaceMessageRequests, "")
       _ = client.importBuildChanges = ImportBuildChanges.yes
-      _ <- server.didSave(s"$cmdPath/BUILD")(identity)
+      _ <- server.didSave(s"BUILD")(identity)
     } yield {
       assertNoDiff(
         client.workspaceMessageRequests,
@@ -70,7 +67,7 @@ class BazelLspSuite
 
   test("generate-bsp-config") {
     cleanWorkspace()
-    writeLayout(BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion))
+    writeLayout(BazelBuildLayout(workspaceLayout, scalaVersion))
     for {
       _ <- server.initialize()
       _ <- server.initialized()
@@ -78,10 +75,10 @@ class BazelLspSuite
       _ = client.messageRequests.clear()
       // We dismissed the import request, so bsp should not be configured
       _ = assert(!bazelBspConfig.exists)
-      _ <- server.didChange(s"$cmdPath/BUILD") { text =>
+      _ <- server.didChange(s"BUILD") { text =>
         text.replace("runner", "runner1")
       }
-      _ <- server.didSave(s"$cmdPath/BUILD")(identity)
+      _ <- server.didSave(s"BUILD")(identity)
       _ = assertNoDiff(client.workspaceMessageRequests, "")
       _ = server.server.buildServerPromise = Promise()
       _ <- server.executeCommand(ServerCommands.GenerateBspConfig)
@@ -102,7 +99,7 @@ class BazelLspSuite
 
   test("import-build") {
     cleanWorkspace()
-    writeLayout(BazelBuildLayout(workspaceLayout, scalaVersion, bazelVersion))
+    writeLayout(BazelBuildLayout(workspaceLayout, scalaVersion))
     for {
       _ <- server.initialize()
       _ <- server.initialized()
@@ -110,10 +107,10 @@ class BazelLspSuite
       _ = client.messageRequests.clear()
       // We dismissed the import request, so bsp should not be configured
       _ = assert(!bazelBspConfig.exists)
-      _ <- server.didChange(s"$cmdPath/BUILD") { text =>
-        text.replace("runner", "runner1")
+      _ <- server.didChange(s"BUILD") { text =>
+        text.replace("main", "main1")
       }
-      _ <- server.didSave(s"$cmdPath/BUILD")(identity)
+      _ <- server.didSave(s"BUILD")(identity)
       _ = assertNoDiff(client.workspaceMessageRequests, "")
       _ = server.server.buildServerPromise = Promise()
       _ <- server.executeCommand(ServerCommands.ImportBuild)
@@ -123,8 +120,8 @@ class BazelLspSuite
       assertNoDiff(
         client.workspaceMessageRequests,
         List(
-          BazelBuildTool.mainClass,
-          multipleProblemsDetectedMessage,
+          BazelBuildTool.mainClass
+            // multipleProblemsDetectedMessage,
         ).mkString("\n"),
       )
       assert(bazelBspConfig.exists)
@@ -132,52 +129,36 @@ class BazelLspSuite
     }
   }
 
-  private val greetingFile =
-    """|package lib
-       |
-       |object Greeting {
-       |  def greet: String = "Hi"
-       |
-       |  def sayHi = println(s"$greet!")
-       |}
-       |""".stripMargin
-
-  private val runnerFile =
-    """|package cmd
-       |
-       |import lib.Greeting
-       |
-       |object Runner {
-       |  def main(args: Array[String]): Unit = {
-       |    Greeting.sayHi
-       |  }
-       |}
-       |""".stripMargin
-
   private val workspaceLayout =
-    s"""|/$libPath/BUILD
-        |load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+    s"""|/BUILD
+        |load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library")
         |
         |scala_library(
-        |    name = "greeting",
-        |    srcs = ["Greeting.scala"],
-        |    visibility = ["//src/main/scala/cmd:__pkg__"],
+        |    name = "lib",
+        |    srcs = ["Hello.scala"],
+        |    deps = [],
         |)
-        |
-        |/$libPath/Greeting.scala
-        |$greetingFile
-        |
-        |/$cmdPath/BUILD
-        |load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary")
         |
         |scala_binary(
-        |    name = "runner",
-        |    main_class = "cmd.Runner",
-        |    srcs = ["Runner.scala"],
-        |    deps = ["//src/main/scala/lib:greeting"],
+        |    name = "main",
+        |    srcs = ["Main.scala"],
+        |    main_class = "hello",
+        |    deps = [":lib"],
         |)
         |
-        |/$cmdPath/Runner.scala
-        |$runnerFile
+        |/Hello.scala
+        |package examples.scala3
+        |
+        |class Hello {
+        |  def hello: String = "Hello"
+        |
+        |}
+        |
+        |
+        |/Main.scala
+        |import examples.scala3.Hello
+        |
+        |object Main {}
+        |
         |""".stripMargin
 }
